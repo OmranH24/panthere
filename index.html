@@ -208,6 +208,12 @@ body.room nav,body.room .hdr{display:none}
 .def p b{color:#C9A24A;font-weight:600}
 .def .sig{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#B4526B;font-weight:900;margin-top:12px;text-align:right}
 
+.mw{display:none;position:relative;border-color:#C9A24A;background:linear-gradient(150deg,#2A0A12,#1A0509)}
+.mw.on{display:block}
+.mw .newb{position:absolute;top:-9px;right:14px;background:#C9A24A;color:#2A0C13;font-size:9.5px;font-weight:900;letter-spacing:2px;text-transform:uppercase;border-radius:99px;padding:3px 9px;display:none}
+.mw.new .newb{display:block}
+.mw .mt{font-family:'Cormorant Garamond',serif;font-size:21px;font-weight:500;color:#EBD9DD;line-height:1.45;white-space:pre-wrap}
+.mw .md{font-size:10.5px;letter-spacing:2px;text-transform:uppercase;color:#B4526B;font-weight:900;margin-top:12px;text-align:right}
 .rule{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid #3A0D19;align-items:flex-start}
 .rule:last-child{border-bottom:none}
 .rule .n{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:700;color:#C9A24A;line-height:1;min-width:22px}
@@ -430,6 +436,13 @@ body.room nav,body.room .hdr{display:none}
   <div class="rm-hdr">
     <div class="rm-t">La Panthère</div>
     <div class="rm-s">members only · one member</div>
+  </div>
+
+  <div class="rm-card mw" id="mw">
+    <span class="newb">new</span>
+    <div class="rm-lab">A whisper from Miro</div>
+    <div class="mt" id="mwText"></div>
+    <div class="md">Miro</div>
   </div>
 
   <div class="rm-card">
@@ -793,8 +806,19 @@ document.getElementById('wSend').onclick=async()=>{
       body:JSON.stringify({access_key:WHISPER_KEY,subject:'🐆 Whisper from La Panthère',from_name:'Rana',message:msg})});
     toast(r.ok?'Delivered. He knows.':'The door jammed. Try again.')}catch(e){toast('The door jammed. Try again.')}
 };
+async function loadMiro(){
+  const card=document.getElementById('mw');
+  try{const r=await fetch('miro.txt?t='+Date.now(),{cache:'no-store'});if(!r.ok)throw 0;
+    const t=(await r.text()).trim();
+    if(!t){card.className='rm-card mw';return}
+    document.getElementById('mwText').textContent=t;
+    const seen=localStorage.getItem('rana:mwseen');
+    card.className='rm-card mw on'+(seen!==t?' new':'');
+    card.onclick=()=>{localStorage.setItem('rana:mwseen',t);card.classList.remove('new')};
+  }catch(e){card.className='rm-card mw'}
+}
 function openRoom(){
-  document.body.classList.add('room');showPage('pg-room');rmRender();
+  document.body.classList.add('room');showPage('pg-room');rmRender();loadMiro();
   const ov=document.getElementById('ov');ov.classList.add('show');requestAnimationFrame(()=>ov.classList.add('vis'));
   ov.onclick=()=>{ov.classList.remove('vis');setTimeout(()=>ov.classList.remove('show'),1050)};
 }
@@ -802,7 +826,7 @@ document.getElementById('rmBack').onclick=()=>{document.body.classList.remove('r
 (function(){let taps=0,timer=null;document.getElementById('pola').addEventListener('click',()=>{taps++;clearTimeout(timer);if(taps>=3){taps=0;openRoom();return}timer=setTimeout(()=>taps=0,1200)})})();
 
 /* ================= INIT ================= */
-if(location.search.indexOf('reset=1')>-1){['rana:state','rana:meas','rana:room','rana:log','rana:hist'].forEach(k=>localStorage.removeItem(k));location.replace(location.pathname)}
+if(location.search.indexOf('reset=1')>-1){['rana:state','rana:meas','rana:room','rana:log','rana:hist','rana:mwseen'].forEach(k=>localStorage.removeItem(k));location.replace(location.pathname)}
 S=sload(K_S,{checks:{},start:null});M=sload(K_M,[]);R=sload(K_R,{streak:0,lives:3,last:null,best:0,days:[]});L=sload(K_L,{});H=sload(K_H,[]);
 if(!S.checks)S.checks={};if(!S.start){S.start=Date.now();ssave(K_S,S)}
 renderHome();renderDays();renderProg();
